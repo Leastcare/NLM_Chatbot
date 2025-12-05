@@ -66,13 +66,14 @@
         }
         .msg-row {
             display: flex;
+            flex-direction: column;
             margin: 6px 0;
         }
         .msg-row.user {
-            justify-content: flex-end;
+            align-items: flex-end;
         }
         .msg-row.bot {
-            justify-content: flex-start;
+            align-items: flex-start;
         }
         .bubble {
             max-width: 75%;
@@ -96,6 +97,24 @@
         .bubble.typing {
             font-style: italic;
             opacity: 0.8;
+        }
+        .bot-actions {
+            display: flex;
+            gap: 6px;
+            margin: 2px 0 0 6px;
+            font-size: 11px;
+        }
+        .bot-action-btn {
+            background: #202331;
+            color: #ced4da;
+            border: 1px solid #343a40;
+            border-radius: 10px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .bot-action-btn:hover {
+            background: #2b3042;
         }
         #input-row {
             display: flex;
@@ -182,6 +201,43 @@
             bubble.textContent = message;
 
             row.appendChild(bubble);
+
+            // For bot messages, add actions (Copy / Explain more / Shorten)
+            if (sender === 'bot') {
+                const actions = document.createElement('div');
+                actions.className = 'bot-actions';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'bot-action-btn';
+                copyBtn.textContent = 'Copy';
+                copyBtn.onclick = async () => {
+                    try {
+                        await navigator.clipboard.writeText(message);
+                    } catch (e) {
+                        console.error('Copy failed', e);
+                    }
+                };
+
+                const explainBtn = document.createElement('button');
+                explainBtn.className = 'bot-action-btn';
+                explainBtn.textContent = 'Explain more';
+                explainBtn.onclick = () => {
+                    sendFollowUp("Explain your previous answer in a bit more detail, step by step.");
+                };
+
+                const shortenBtn = document.createElement('button');
+                shortenBtn.className = 'bot-action-btn';
+                shortenBtn.textContent = 'Shorten';
+                shortenBtn.onclick = () => {
+                    sendFollowUp("Rewrite your previous answer in 2 concise sentences, keeping only the key idea.");
+                };
+
+                actions.appendChild(copyBtn);
+                actions.appendChild(explainBtn);
+                actions.appendChild(shortenBtn);
+                row.appendChild(actions);
+            }
+
             chatbox.appendChild(row);
             chatbox.scrollTop = chatbox.scrollHeight;
         }
@@ -193,6 +249,15 @@
             addMessage(message, 'user');
             input.value = '';
 
+            await callBackend(message);
+        }
+
+        async function sendFollowUp(promptText) {
+            addMessage(promptText, 'user');
+            await callBackend(promptText);
+        }
+
+        async function callBackend(message) {
             // Typing indicator
             const typingRow = document.createElement('div');
             typingRow.className = 'msg-row bot';
