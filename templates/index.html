@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NLM Chatbot</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #252b3d 0, #090b10 40%, #050608 100%);
+            color: #f5f5f5;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #app {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(15, 17, 25, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            padding: 20px 22px 16px;
+            border: 1px solid rgba(120, 255, 120, 0.15);
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 22px;
+            letter-spacing: 0.03em;
+        }
+        #top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        #mode {
+            background: #151821;
+            color: #e9ecef;
+            border: 1px solid #3b4257;
+            padding: 5px 8px;
+            border-radius: 6px;
+        }
+        #reset-btn {
+            padding: 6px 12px;
+            background: #272b3b;
+            color: #f1f3f5;
+            border: 1px solid #3b4257;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        #reset-btn:hover {
+            background: #34394d;
+        }
+        #chatbox {
+            height: 430px;
+            overflow-y: auto;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #050609;
+            border: 1px solid #1f2333;
+            margin-bottom: 10px;
+        }
+        .msg-row {
+            display: flex;
+            margin: 6px 0;
+        }
+        .msg-row.user {
+            justify-content: flex-end;
+        }
+        .msg-row.bot {
+            justify-content: flex-start;
+        }
+        .bubble {
+            max-width: 75%;
+            padding: 8px 11px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        .msg-row.user .bubble {
+            background: linear-gradient(135deg, #39ff14, #86ff75);
+            color: #020305;
+            border-bottom-right-radius: 4px;
+        }
+        .msg-row.bot .bubble {
+            background: #151821;
+            color: #e9ecef;
+            border-bottom-left-radius: 4px;
+        }
+        .bubble.typing {
+            font-style: italic;
+            opacity: 0.8;
+        }
+        #input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        #input {
+            flex: 1;
+            padding: 10px;
+            background: #05070d;
+            color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #2c3144;
+            font-size: 14px;
+        }
+        #input:focus {
+            outline: none;
+            border-color: #39ff14;
+            box-shadow: 0 0 0 1px rgba(57,255,20,0.3);
+        }
+        button.send-btn {
+            padding: 0 20px;
+            background: #39ff14;
+            color: #020305;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        button.send-btn:hover {
+            filter: brightness(1.05);
+        }
+        #footer {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #868e96;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>NLM Chatbot</h1>
+
+        <div id="top-bar">
+            <div>
+                <label for="mode">Mode:</label>
+                <select id="mode">
+                    <option value="general">General</option>
+                    <option value="mca">MCA Study</option>
+                    <option value="interview">Interview Prep</option>
+                    <option value="code">Explain Code</option>
+                </select>
+            </div>
+            <button id="reset-btn">New Chat</button>
+        </div>
+
+        <div id="chatbox"></div>
+
+        <div id="input-row">
+            <input type="text" id="input" placeholder="Ask anything..."
+                   onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+
+        <div id="footer">
+            NLM Chatbot · MCA Final-Year Project · Python · Flask · OpenRouter · HTML/CSS/JS
+        </div>
+    </div>
+
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const input = document.getElementById('input');
+        const modeSelect = document.getElementById('mode');
+        const resetBtn = document.getElementById('reset-btn');
+
+        function addMessage(message, sender) {
+            const row = document.createElement('div');
+            row.className = 'msg-row ' + sender;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.textContent = message;
+
+            row.appendChild(bubble);
+            chatbox.appendChild(row);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Typing indicator
+            const typingRow = document.createElement('div');
+            typingRow.className = 'msg-row bot';
+            const typingBubble = document.createElement('div');
+            typingBubble.className = 'bubble typing';
+            typingBubble.textContent = 'Thinking...';
+            typingRow.appendChild(typingBubble);
+            chatbox.appendChild(typingRow);
+            chatbox.scrollTop = chatbox.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: message,
+                        mode: modeSelect ? modeSelect.value : 'general'
+                    })
+                });
+                const data = await response.json();
+
+                chatbox.removeChild(typingRow);
+                addMessage(data.reply, 'bot');
+            } catch (e) {
+                chatbox.removeChild(typingRow);
+                addMessage('Sorry, there was a problem contacting the server.', 'bot');
+            }
+        }
+
+        resetBtn.addEventListener('click', async () => {
+            chatbox.innerHTML = '';
+            addMessage('New chat started. Context cleared.', 'bot');
+
+            try {
+                await fetch('/reset', { method: 'POST' });
+            } catch (e) {
+                // ignore
+            }
+        });
+    </script>
+</body>
+</html>
