@@ -21,7 +21,7 @@ def build_system_prompt(mode: str) -> str:
     mode: 'general', 'mca', 'interview', 'code'
     """
     base = (
-        "You are NLM Chatbot, a helpful assistant for an MCA student. "
+        "You are NLM Chatbot, a helpful assistant for a student. "
         "Always answer the user's latest message in the context of the full conversation. "
         "Start every reply with 1–2 sentences that directly answer the question. "
         "Then, if useful, add at most 2–3 short supporting sentences or bullet points. "
