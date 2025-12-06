@@ -5,8 +5,8 @@
     <style>
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: radial-gradient(circle at top, #252b3d 0, #090b10 40%, #050608 100%);
-            color: #f5f5f5;
+            background: radial-gradient(circle at top, #202636 0, #05070d 45%, #020308 100%);
+            color: #e9ecef;
             margin: 0;
             min-height: 100vh;
             display: flex;
@@ -16,24 +16,31 @@
         }
         #app {
             width: 100%;
-            max-width: 900px;
-            background: rgba(15, 17, 25, 0.95);
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            padding: 20px 22px 16px;
-            border: 1px solid rgba(120, 255, 120, 0.15);
+            max-width: 940px;
+            background: rgba(9, 11, 20, 0.9);
+            border-radius: 22px;
+            box-shadow: 0 26px 70px rgba(0,0,0,0.8);
+            padding: 22px 24px 16px;
+            border: 1px solid rgba(120, 255, 120, 0.22);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
         }
         h1 {
-            margin: 0 0 10px;
-            font-size: 22px;
-            letter-spacing: 0.03em;
+            margin: 0 0 6px;
+            font-size: 24px;
+            letter-spacing: 0.05em;
+        }
+        #subtitle {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 10px;
         }
         #top-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             flex-wrap: wrap;
         }
         #mode {
@@ -58,16 +65,16 @@
         #chatbox {
             height: 430px;
             overflow-y: auto;
-            border-radius: 10px;
-            padding: 10px 12px;
-            background: #050609;
-            border: 1px solid #1f2333;
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: #05070e;
+            border: 1px solid #181c2b;
             margin-bottom: 10px;
         }
         .msg-row {
             display: flex;
             flex-direction: column;
-            margin: 6px 0;
+            margin: 8px 0;
         }
         .msg-row.user {
             align-items: flex-end;
@@ -76,11 +83,11 @@
             align-items: flex-start;
         }
         .bubble {
-            max-width: 75%;
-            padding: 8px 11px;
-            border-radius: 14px;
+            max-width: 78%;
+            padding: 9px 12px;
+            border-radius: 16px;
             font-size: 14px;
-            line-height: 1.4;
+            line-height: 1.45;
             word-wrap: break-word;
             white-space: pre-wrap;
         }
@@ -90,9 +97,16 @@
             border-bottom-right-radius: 4px;
         }
         .msg-row.bot .bubble {
-            background: #151821;
+            background: rgba(19, 22, 35, 0.95);
             color: #e9ecef;
             border-bottom-left-radius: 4px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+        }
+        .msg-row.user .bubble:hover {
+            box-shadow: 0 0 10px rgba(57,255,20,0.45);
+        }
+        .msg-row.bot .bubble:hover {
+            box-shadow: 0 0 10px rgba(0,0,0,0.6);
         }
         .bubble.typing {
             font-style: italic;
@@ -101,7 +115,7 @@
         .bot-actions {
             display: flex;
             gap: 6px;
-            margin: 2px 0 0 6px;
+            margin: 3px 0 0 4px;
             font-size: 11px;
         }
         .bot-action-btn {
@@ -116,13 +130,24 @@
         .bot-action-btn:hover {
             background: #2b3042;
         }
+        .bot-action-btn:active,
+        .suggest-btn:active,
+        button.send-btn:active {
+            transform: translateY(1px);
+            filter: brightness(0.95);
+        }
+        .msg-time {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
         #input-row {
             display: flex;
             gap: 10px;
             margin-top: 4px;
             position: sticky;
             bottom: 0;
-            background: rgba(15,17,25,0.98);
+            background: rgba(9, 11, 20, 0.96);
             padding-top: 4px;
         }
         #input {
@@ -174,6 +199,7 @@
 <body>
     <div id="app">
         <h1>NLM Chatbot</h1>
+        <div id="subtitle">Conversational assistant for study, coding, interviews, and everyday questions.</div>
 
         <div id="top-bar">
             <div>
@@ -205,7 +231,7 @@
         </div>
 
         <div id="footer">
-            NLM Chatbot · MCA Final-Year Project · Python · Flask · OpenRouter · HTML/CSS/JS
+            NLM Chatbot · Powered by Flask & OpenRouter · Designed by Leastcare
         </div>
     </div>
 
@@ -227,8 +253,16 @@
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
             bubble.textContent = message;
-
             row.appendChild(bubble);
+
+            // Time stamp
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'msg-time';
+            const now = new Date();
+            const hh = now.getHours().toString().padStart(2, '0');
+            const mm = now.getMinutes().toString().padStart(2, '0');
+            timeDiv.textContent = `${hh}:${mm}`;
+            row.appendChild(timeDiv);
 
             // For bot messages, add actions (Copy / Explain more / Shorten)
             if (sender === 'bot') {
@@ -334,6 +368,11 @@
             } catch (e) {
                 // ignore
             }
+        });
+
+        // Initial welcome message on first load
+        window.addEventListener('load', () => {
+            addMessage('Welcome to NLM Chatbot. Choose a mode (General, MCA Study, Interview, or Explain Code) and start typing your question.', 'bot');
         });
     </script>
 </body>
