@@ -120,6 +120,10 @@
             display: flex;
             gap: 10px;
             margin-top: 4px;
+            position: sticky;
+            bottom: 0;
+            background: rgba(15,17,25,0.98);
+            padding-top: 4px;
         }
         #input {
             flex: 1;
@@ -154,6 +158,17 @@
             color: #868e96;
             text-align: right;
         }
+        .suggest-btn {
+            background: #11141d;
+            color: #e9ecef;
+            border: 1px solid #2c3144;
+            border-radius: 999px;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+        .suggest-btn:hover {
+            background: #1b1f2b;
+        }
     </style>
 </head>
 <body>
@@ -171,6 +186,14 @@
                 </select>
             </div>
             <button id="reset-btn">New Chat</button>
+        </div>
+
+        <div id="suggestions" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;font-size:12px;">
+            <span style="opacity:0.8;">Try:</span>
+            <button class="suggest-btn" onclick="useSuggestion('Explain deadlock with a simple example.')">OS · Deadlock</button>
+            <button class="suggest-btn" onclick="useSuggestion('What is normalization? Explain 1NF, 2NF, 3NF briefly.')">DBMS · Normalization</button>
+            <button class="suggest-btn" onclick="useSuggestion('Time complexity of binary search and why?')">DSA · Binary search</button>
+            <button class="suggest-btn" onclick="useSuggestion('Difference between TCP and UDP in simple words.')">Networking · TCP vs UDP</button>
         </div>
 
         <div id="chatbox"></div>
@@ -191,6 +214,11 @@
         const input = document.getElementById('input');
         const modeSelect = document.getElementById('mode');
         const resetBtn = document.getElementById('reset-btn');
+
+        function useSuggestion(text) {
+            input.value = text;
+            sendMessage();
+        }
 
         function addMessage(message, sender) {
             const row = document.createElement('div');
@@ -289,7 +317,17 @@
 
         resetBtn.addEventListener('click', async () => {
             chatbox.innerHTML = '';
-            addMessage('New chat started. Context cleared.', 'bot');
+
+            const mode = modeSelect ? modeSelect.value : 'general';
+            if (mode === 'mca') {
+                addMessage('New chat started. Ask MCA topics like OS vs process/thread, DBMS normalization, DSA time complexity, etc.', 'bot');
+            } else if (mode === 'interview') {
+                addMessage('New chat started. Ask for interview-style answers, e.g. “Tell me about yourself” or “Explain polymorphism in OOP”.', 'bot');
+            } else if (mode === 'code') {
+                addMessage('New chat started. Paste your code and ask for explanation, bug fixing, or improvements.', 'bot');
+            } else {
+                addMessage('New chat started. Ask anything: general questions, coding doubts, or MCA topics.', 'bot');
+            }
 
             try {
                 await fetch('/reset', { method: 'POST' });
