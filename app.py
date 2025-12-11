@@ -9,13 +9,12 @@ app = Flask(__name__)
 
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 
-# Simple in-memory conversation history (single user/demo)
 conversation_history = []
 question_count = 0
-QUESTION_LIMIT = 40  # free-session style limit
+QUESTION_LIMIT = 40
 
 base = (
-    "You are NLM Chatbot, a helpful assistant that can answer questions on any topic, "
+    "You are NLP Chatbot, a helpful assistant that can answer questions on any topic, "
     "with extra skill in MCA-related subjects. "
     "Always reply ONLY to what the user actually asked in their last message. "
     "Do NOT summarize earlier conversation unless the user explicitly asks for a summary. "
@@ -32,11 +31,6 @@ base = (
 
 
 def build_system_prompt(mode: str) -> str:
-    """
-    Returns a system prompt based on selected mode.
-    mode: 'general', 'mca', 'interview', 'code'
-    """
-
     if mode == "mca":
         extra = (
             "Focus mainly on MCA-related topics: programming, algorithms, data structures, "
@@ -64,7 +58,6 @@ def build_system_prompt(mode: str) -> str:
 
 
 def log_qa(question: str, answer: str, mode: str):
-    """Append each Q&A pair to a simple log file with timestamp and mode."""
     try:
         with open("chat_log.txt", "a", encoding="utf-8") as f:
             f.write(
@@ -72,7 +65,7 @@ def log_qa(question: str, answer: str, mode: str):
                 f"MODE={mode}\nQ: {question}\nA: {answer}\n\n"
             )
     except Exception:
-        # Logging errors should not crash the app
+
         pass
 
 
@@ -92,7 +85,6 @@ def chat():
     if not user_message:
         return jsonify({"reply": "Please type a message first."})
 
-    # Simple free-session style limit
     if question_count >= QUESTION_LIMIT:
         reply = (
             "You have reached the question limit for this free demo session. "
@@ -104,12 +96,11 @@ def chat():
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
         "HTTP-Referer": "http://localhost:5000",
-        "X-Title": "NLM Chatbot"
+        "X-Title": "NLP Chatbot"
     }
 
     system_prompt = build_system_prompt(mode)
 
-    # Messages: system + limited history + new user message
     messages = [
                    {"role": "system", "content": system_prompt}
                ] + conversation_history + [
@@ -132,6 +123,7 @@ def chat():
             timeout=60
         )
     except Exception:
+
         return jsonify({"reply": "Network error while contacting the AI service. Please try again."})
 
     print("STATUS:", response.status_code)
@@ -155,15 +147,12 @@ def chat():
 
     bot_reply = bot_reply.strip()
 
-    # Update history
     conversation_history.append({"role": "user", "content": user_message})
     conversation_history.append({"role": "assistant", "content": bot_reply})
 
-    # Keep only last 10 exchanges (20 messages)
     if len(conversation_history) > 20:
         conversation_history[:] = conversation_history[-20:]
 
-    # Increment question count and log for report
     question_count += 1
     log_qa(user_message, bot_reply, mode)
 
