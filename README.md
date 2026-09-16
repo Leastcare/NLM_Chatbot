@@ -1,115 +1,120 @@
-# NLM Chatbot
+# 🌸 NLM Chatbot
 
-A fast, sarcastic-when-needed Flask chatbot powered by **Groq** (LLaMA 3.3 70B) — free tier, near-instant responses.
+**Live Demo → [nlm-chatbot.vercel.app](https://nlm-chatbot.vercel.app/)**
 
----
-
-## Features
-
-- 5 chat modes: General · MCA Study · Interview Prep · Explain Code · 😏 Sarcastic
-- Markdown rendering with syntax-highlighted code blocks
-- Per-user session isolation (no conversation bleed between users)
-- 40-question session limit with live counter
-- Copy button with visual feedback
-- Auto-growing textarea (Shift+Enter for new line)
-- Mobile responsive layout
-- Persistent chat log to `chat_log.txt`
+A conversational AI chatbot built with Flask and powered by **Qwen 3 27B via Groq** — fast, free-tier, and surprisingly witty.
 
 ---
 
-## Setup
+## ✦ Features
 
-### 1. Clone and create a virtual environment
+- **5 chat modes** — General · MCA Study · Interview Prep · Explain Code · Sarcastic
+- **Cherry blossom UI** — falling petal canvas animation, sakura light theme, warm paper aesthetic
+- **3-D tilt effects** — mouse-parallax on bubbles, sidebar, input, and chips
+- **Lucide icons** — clean SVG icons throughout
+- **Markdown rendering** — syntax-highlighted code blocks via marked.js + highlight.js
+- **Per-session conversation history** — isolated per browser tab, no cross-user bleed
+- **40-question session limit** with live shimmer progress bar
+- **Copy / Explain more / Shorten** actions on every bot reply
+- **Export chat** — download full conversation as `.txt`
+- **Mobile responsive** — off-canvas sidebar, works on all screen sizes
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Backend | Python · Flask |
+| AI Model | Qwen 3 27B (via Groq API) |
+| Frontend | Vanilla HTML / CSS / JS |
+| Markdown | marked.js · highlight.js |
+| Icons | Lucide SVG |
+| Deployment | Vercel |
+
+---
+
+## 🚀 Local Setup
+
+**1. Clone the repo**
+```bash
+git clone https://github.com/Leastcare/NLM_Chatbot.git
+cd NLM_Chatbot
+```
+
+**2. Create and activate a virtual environment**
 ```bash
 python -m venv venv
+
 # Windows
 venv\Scripts\activate
-# macOS/Linux
+
+# macOS / Linux
 source venv/bin/activate
 ```
 
-### 2. Install dependencies
+**3. Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Get a free Groq API key
-1. Sign up at [console.groq.com](https://console.groq.com)
-2. Create an API key
-3. Copy `.env.example` to `.env` and fill in your key:
-
+**4. Create your `.env` file**
 ```bash
 cp .env.example .env
 ```
-
-`.env` contents:
+Then fill in your values:
 ```
 GROQ_API_KEY=your_groq_api_key_here
-SECRET_KEY=any_long_random_string_here
+SECRET_KEY=any_long_random_string
 FLASK_DEBUG=false
 PORT=5000
 ```
 
-### 4. Run locally
+Get a free Groq API key at [console.groq.com](https://console.groq.com).
+
+**5. Run**
 ```bash
 python app.py
 ```
-Open [http://localhost:5000](http://localhost:5000)
+Open [http://localhost:5000](http://localhost:5000).
 
 ---
 
-## Production Deployment (e.g. Render, Railway, Fly.io)
+## ☁️ Deploy on Vercel
 
-All have a free tier. Use gunicorn:
-
-```bash
-gunicorn app:app
-```
-
-Set the following environment variables in your hosting dashboard:
-- `GROQ_API_KEY`
-- `SECRET_KEY` (any long random string — keep it secret)
-- `PORT` (usually set automatically by the host)
-- `FLASK_DEBUG=false`
-
-A `Procfile` is included:
-```
-web: gunicorn app:app
-```
+1. Fork / import this repo into [vercel.com](https://vercel.com)
+2. Add environment variables in the Vercel dashboard:
+   - `GROQ_API_KEY`
+   - `SECRET_KEY`
+   - `FLASK_DEBUG=false`
+3. Deploy — the `vercel.json` is already configured
 
 ---
 
-## Groq Free Tier Limits (as of 2025)
-
-| Model | Requests/day | Tokens/minute |
-|---|---|---|
-| llama-3.3-70b-versatile | 14,400 | 6,000 |
-
-More than enough for personal/demo use.
-
----
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 NLM_Chatbot/
-├── app.py              # Flask backend
+├── app.py              # Flask backend — routes, Groq API, session logic
 ├── requirements.txt    # Dependencies
-├── .env                # API keys (never commit this)
-├── .env.example        # Template for .env
+├── vercel.json         # Vercel deployment config
+├── Procfile            # Gunicorn entry point (Render / Railway)
+├── .env.example        # Environment variable template
 ├── .gitignore
-├── Procfile            # For gunicorn/deployment
 ├── README.md
-├── chat_log.txt        # Auto-created on first message
 └── templates/
-    └── index.html      # Full frontend (HTML/CSS/JS)
+    └── index.html      # Entire frontend — HTML · CSS · JS · canvas petals
 ```
 
 ---
 
-## Tech Stack
+## 📸 Preview
 
-- **Backend**: Python · Flask · Groq SDK
-- **AI Model**: LLaMA 3.3 70B Versatile (via Groq)
-- **Frontend**: Vanilla HTML/CSS/JS · marked.js · highlight.js
-- **Deployment**: Gunicorn
+> Cherry blossom light theme with falling petal animation, glassmorphic panels, and 3-D tilt on hover.
+
+---
+
+## 👤 Author
+
+Built by **Leastcare**  
+Powered by [Groq](https://groq.com) · Deployed on [Vercel](https://vercel.com)
