@@ -19,8 +19,12 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", os.urandom(32))
+# Use absolute path for templates so Vercel can find them regardless of cwd
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=os.path.join(_BASE_DIR, "templates"))
+app.secret_key = os.getenv("SECRET_KEY") or os.urandom(32)
+if not os.getenv("SECRET_KEY"):
+    log.warning("SECRET_KEY not set — sessions will not persist across requests.")
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
@@ -120,10 +124,20 @@ def increment_question_count() -> int:
 # ---------------------------------------------------------------------------
 @app.route("/")
 def index():
-    # Give every new browser tab its own session ID
     if "session_id" not in session:
         session["session_id"] = str(uuid.uuid4())
     return render_template("index.html")
+
+
+@app.route("/health")
+def health():
+    """Quick liveness check — no AI call."""
+    return jsonify({
+        "status": "ok",
+        "groq_key_set": bool(GROQ_API_KEY),
+        "secret_key_set": bool(os.getenv("SECRET_KEY")),
+        "models": MODELS,
+    })
 
 
 @app.route("/chat", methods=["POST"])
