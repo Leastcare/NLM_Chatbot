@@ -3,9 +3,9 @@ import os
 import uuid
 from datetime import datetime
 
+import requests as http_requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request, session
-from groq import Groq, APIError, APITimeoutError
 
 # ---------------------------------------------------------------------------
 # Bootstrap
@@ -26,10 +26,9 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     log.warning("GROQ_API_KEY is not set. The /chat endpoint will fail.")
 
-client = Groq(api_key=GROQ_API_KEY)
-
 QUESTION_LIMIT = 40
-MODEL = "qwen/qwen3.8-27b"   # best available model on this account
+MODEL          = "qwen/qwen3.8-27b"
+GROQ_URL       = "https://api.groq.com/openai/v1/chat/completions"
 
 # ---------------------------------------------------------------------------
 # System prompt builder
@@ -157,20 +156,32 @@ def chat():
     )
 
     try:
-        completion = client.chat.completions.create(
-            model=MODEL,
-            messages=messages,
-            max_tokens=512,
-            temperature=0.7,
-            top_p=0.9,
+        resp = http_requests.post(
+            GROQ_URL,
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model":       MODEL,
+                "messages":    messages,
+                "max_tokens":  512,
+                "temperature": 0.7,
+                "top_p":       0.9,
+            },
+            timeout=55,
         )
-        bot_reply = completion.choices[0].message.content.strip()
-    except APITimeoutError:
+        if resp.status_code != 200:
+            log.error("Groq API returned %s: %s", resp.status_code, resp.text[:200])
+            return jsonify({
+                "reply": f"AI service error ({resp.status_code}). Please try again shortly.",
+                "count": get_question_count(),
+            })
+        data = resp.json()
+        bot_reply = data["choices"][0]["message"]["content"].strip()
+    except http_requests.Timeout:
         log.error("Groq API timed out")
         return jsonify({"reply": "The AI took too long to respond. Please try again.", "count": get_question_count()})
-    except APIError as exc:
-        log.error("Groq API error: %s", exc)
-        return jsonify({"reply": f"AI service error ({exc.status_code}). Please try again shortly.", "count": get_question_count()})
     except Exception as exc:
         log.exception("Unexpected error calling Groq: %s", exc)
         return jsonify({"reply": "Something went wrong. Please try again.", "count": get_question_count()})
