@@ -27,8 +27,9 @@ if not GROQ_API_KEY:
     log.warning("GROQ_API_KEY is not set. The /chat endpoint will fail.")
 
 QUESTION_LIMIT = 40
-MODEL          = "qwen/qwen3.8-27b"
-GROQ_URL       = "https://api.groq.com/openai/v1/chat/completions"
+# Primary model + fallback — if primary hits rate limit, fallback kicks in automatically
+MODELS   = ["groq/compound-mini", "qwen/qwen3.8-27b"]
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # ---------------------------------------------------------------------------
 # System prompt builder
@@ -156,29 +157,43 @@ def chat():
     )
 
     try:
-        resp = http_requests.post(
-            GROQ_URL,
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model":       MODEL,
-                "messages":    messages,
-                "max_tokens":  512,
-                "temperature": 0.7,
-                "top_p":       0.9,
-            },
-            timeout=55,
-        )
-        if resp.status_code != 200:
-            log.error("Groq API returned %s: %s", resp.status_code, resp.text[:200])
-            return jsonify({
-                "reply": f"AI service error ({resp.status_code}). Please try again shortly.",
-                "count": get_question_count(),
-            })
-        data = resp.json()
-        bot_reply = data["choices"][0]["message"]["content"].strip()
+        bot_reply = None
+        last_status = None
+        for model in MODELS:
+            resp = http_requests.post(
+                GROQ_URL,
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model":       model,
+                    "messages":    messages,
+                    "max_tokens":  512,
+                    "temperature": 0.7,
+                    "top_p":       0.9,
+                },
+                timeout=55,
+            )
+            last_status = resp.status_code
+            if resp.status_code == 200:
+                content = resp.json()["choices"][0]["message"]["content"].strip()
+                if content:          # some models return 200 with empty content
+                    bot_reply = content
+                    break
+                else:
+                    log.warning("Model %s returned empty content, trying next.", model)
+            elif resp.status_code == 429:
+                log.warning("Model %s rate-limited (429), trying next.", model)
+            else:
+                log.error("Model %s returned %s: %s", model, resp.status_code, resp.text[:200])
+                break                # non-rate-limit error — don't retry
+
+        if not bot_reply:
+            if last_status == 429:
+                return jsonify({"reply": "I'm a bit overwhelmed right now — all models are rate-limited. Wait a few seconds and try again.", "count": get_question_count()})
+            return jsonify({"reply": f"AI service error ({last_status}). Please try again shortly.", "count": get_question_count()})
+
     except http_requests.Timeout:
         log.error("Groq API timed out")
         return jsonify({"reply": "The AI took too long to respond. Please try again.", "count": get_question_count()})
