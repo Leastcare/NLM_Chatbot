@@ -183,11 +183,11 @@ def chat():
                 json={
                     "model":       model,
                     "messages":    messages,
-                    "max_tokens":  512,
+                    "max_tokens":  600,
                     "temperature": 0.7,
                     "top_p":       0.9,
                 },
-                timeout=55,
+                timeout=50,
             )
             last_status = resp.status_code
             if resp.status_code == 200:
